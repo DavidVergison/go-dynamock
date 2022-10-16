@@ -21,10 +21,20 @@ func (e *BatchWriteItemExpectation) WillReturns(res dynamodb.BatchWriteItemOutpu
 	return e
 }
 
+// WillReturnError - method for set desired error
+func (e *BatchWriteItemExpectation) WillReturnError(err error) *BatchWriteItemExpectation {
+	e.err = err
+	return e
+}
+
 // BatchWriteItem - this func will be invoked when test running matching expectation with actual input
 func (e *MockDynamoDB) BatchWriteItem(input *dynamodb.BatchWriteItemInput) (*dynamodb.BatchWriteItemOutput, error) {
 	if len(e.dynaMock.BatchWriteItemExpect) > 0 {
 		for i, x := range e.dynaMock.BatchWriteItemExpect {
+			if x.err != nil {
+				return &dynamodb.BatchWriteItemOutput{}, x.err
+			}
+
 			if x.input != nil {
 				if reflect.DeepEqual(x.input, input.RequestItems) {
 					e.dynaMock.BatchWriteItemExpect = append(e.dynaMock.BatchWriteItemExpect[:i], e.dynaMock.BatchWriteItemExpect[i:]...)
@@ -41,6 +51,10 @@ func (e *MockDynamoDB) BatchWriteItem(input *dynamodb.BatchWriteItemInput) (*dyn
 func (e *MockDynamoDB) BatchWriteItemWithContext(ctx aws.Context, input *dynamodb.BatchWriteItemInput, opt ...request.Option) (*dynamodb.BatchWriteItemOutput, error) {
 	if len(e.dynaMock.BatchWriteItemExpect) > 0 {
 		x := e.dynaMock.BatchWriteItemExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return &dynamodb.BatchWriteItemOutput{}, x.err
+		}
 
 		if x.input != nil {
 			if !reflect.DeepEqual(x.input, input.RequestItems) {

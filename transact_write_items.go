@@ -27,10 +27,20 @@ func (e *TransactWriteItemsExpectation) WillReturns(res dynamodb.TransactWriteIt
 	return e
 }
 
+// WillReturnError - method for set desired error
+func (e *TransactWriteItemsExpectation) WillReturnError(err error) *TransactWriteItemsExpectation {
+	e.err = err
+	return e
+}
+
 // TransactWriteItems - this func will be invoked when test running matching expectation with actual input
 func (e *MockDynamoDB) TransactWriteItems(input *dynamodb.TransactWriteItemsInput) (*dynamodb.TransactWriteItemsOutput, error) {
 	if len(e.dynaMock.TransactWriteItemsExpect) > 0 {
 		x := e.dynaMock.TransactWriteItemsExpect[0] // get first element of expectation
+
+		if x.err != nil {
+			return &dynamodb.TransactWriteItemsOutput{}, x.err
+		}
 
 		// compare lengths
 		if len(x.items) != len(input.TransactItems) {
@@ -64,5 +74,5 @@ func (e *MockDynamoDB) TransactWriteItems(input *dynamodb.TransactWriteItemsInpu
 }
 
 func (e *MockDynamoDB) TransactWriteItemsWithContext(ctx aws.Context, input *dynamodb.TransactWriteItemsInput, opts ...request.Option) (*dynamodb.TransactWriteItemsOutput, error) {
-  return e.TransactWriteItems(input)
+	return e.TransactWriteItems(input)
 }

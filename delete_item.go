@@ -27,10 +27,20 @@ func (e *DeleteItemExpectation) WillReturns(res dynamodb.DeleteItemOutput) *Dele
 	return e
 }
 
+// WillReturnError - method for set desired error
+func (e *DeleteItemExpectation) WillReturnError(err error) *DeleteItemExpectation {
+	e.err = err
+	return e
+}
+
 // DeleteItem - this func will be invoked when test running matching expectation with actual input
 func (e *MockDynamoDB) DeleteItem(input *dynamodb.DeleteItemInput) (*dynamodb.DeleteItemOutput, error) {
 	if len(e.dynaMock.DeleteItemExpect) > 0 {
 		x := e.dynaMock.DeleteItemExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return &dynamodb.DeleteItemOutput{}, x.err
+		}
 
 		if x.table != nil {
 			if *x.table != *input.TableName {
@@ -57,6 +67,10 @@ func (e *MockDynamoDB) DeleteItem(input *dynamodb.DeleteItemInput) (*dynamodb.De
 func (e *MockDynamoDB) DeleteItemWithContext(ctx aws.Context, input *dynamodb.DeleteItemInput, options ...request.Option) (*dynamodb.DeleteItemOutput, error) {
 	if len(e.dynaMock.DeleteItemExpect) > 0 {
 		x := e.dynaMock.DeleteItemExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return &dynamodb.DeleteItemOutput{}, x.err
+		}
 
 		if x.table != nil {
 			if *x.table != *input.TableName {

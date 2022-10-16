@@ -18,10 +18,20 @@ func (e *WaitTableExistExpectation) WillReturns(err error) *WaitTableExistExpect
 	return e
 }
 
+// WillReturnError - method for set desired error
+func (e *WaitTableExistExpectation) WillReturnError(err error) *WaitTableExistExpectation {
+	e.err = err
+	return e
+}
+
 // WaitUntilTableExists - this func will be invoked when test running matching expectation with actual input
 func (e *MockDynamoDB) WaitUntilTableExists(input *dynamodb.DescribeTableInput) error {
 	if len(e.dynaMock.WaitTableExistExpect) > 0 {
 		x := e.dynaMock.WaitTableExistExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return x.err
+		}
 
 		if x.table != nil {
 			if *x.table != *input.TableName {

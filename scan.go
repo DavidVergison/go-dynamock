@@ -21,10 +21,20 @@ func (e *ScanExpectation) WillReturns(res dynamodb.ScanOutput) *ScanExpectation 
 	return e
 }
 
+// WillReturnError - method for set desired error
+func (e *ScanExpectation) WillReturnError(err error) *ScanExpectation {
+	e.err = err
+	return e
+}
+
 // Scan - this func will be invoked when test running matching expectation with actual input
 func (e *MockDynamoDB) Scan(input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error) {
 	if len(e.dynaMock.ScanExpect) > 0 {
 		x := e.dynaMock.ScanExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return &dynamodb.ScanOutput{}, x.err
+		}
 
 		if x.table != nil {
 			if *x.table != *input.TableName {
@@ -46,6 +56,10 @@ func (e *MockDynamoDB) ScanWithContext(ctx aws.Context, input *dynamodb.ScanInpu
 	if len(e.dynaMock.ScanExpect) > 0 {
 		x := e.dynaMock.ScanExpect[0] //get first element of expectation
 
+		if x.err != nil {
+			return &dynamodb.ScanOutput{}, x.err
+		}
+
 		if x.table != nil {
 			if *x.table != *input.TableName {
 				return &dynamodb.ScanOutput{}, fmt.Errorf("Expect table %s but found table %s", *x.table, *input.TableName)
@@ -65,6 +79,10 @@ func (e *MockDynamoDB) ScanWithContext(ctx aws.Context, input *dynamodb.ScanInpu
 func (e *MockDynamoDB) ScanPages(input *dynamodb.ScanInput, fn func(*dynamodb.ScanOutput, bool) bool) error {
 	if len(e.dynaMock.ScanExpect) > 0 {
 		x := e.dynaMock.ScanExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return x.err
+		}
 
 		if x.table != nil {
 			if *x.table != *input.TableName {
@@ -86,6 +104,10 @@ func (e *MockDynamoDB) ScanPages(input *dynamodb.ScanInput, fn func(*dynamodb.Sc
 func (e *MockDynamoDB) ScanPagesWithContext(ctx aws.Context, input *dynamodb.ScanInput, fn func(*dynamodb.ScanOutput, bool) bool, opts ...request.Option) error {
 	if len(e.dynaMock.ScanExpect) > 0 {
 		x := e.dynaMock.ScanExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return x.err
+		}
 
 		if x.table != nil {
 			if *x.table != *input.TableName {

@@ -33,10 +33,20 @@ func (e *UpdateItemExpectation) WillReturns(res dynamodb.UpdateItemOutput) *Upda
 	return e
 }
 
+// WillReturnError - method for set desired error
+func (e *UpdateItemExpectation) WillReturnError(err error) *UpdateItemExpectation {
+	e.err = err
+	return e
+}
+
 // UpdateItem - this func will be invoked when test running matching expectation with actual input
 func (e *MockDynamoDB) UpdateItem(input *dynamodb.UpdateItemInput) (*dynamodb.UpdateItemOutput, error) {
 	if len(e.dynaMock.UpdateItemExpect) > 0 {
 		x := e.dynaMock.UpdateItemExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return &dynamodb.UpdateItemOutput{}, x.err
+		}
 
 		if x.table != nil {
 			if *x.table != *input.TableName {
@@ -69,6 +79,10 @@ func (e *MockDynamoDB) UpdateItem(input *dynamodb.UpdateItemInput) (*dynamodb.Up
 func (e *MockDynamoDB) UpdateItemWithContext(ctx aws.Context, input *dynamodb.UpdateItemInput, opt ...request.Option) (*dynamodb.UpdateItemOutput, error) {
 	if len(e.dynaMock.UpdateItemExpect) > 0 {
 		x := e.dynaMock.UpdateItemExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return &dynamodb.UpdateItemOutput{}, x.err
+		}
 
 		if x.table != nil {
 			if *x.table != *input.TableName {

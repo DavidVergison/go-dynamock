@@ -21,10 +21,20 @@ func (e *BatchGetItemExpectation) WillReturns(res dynamodb.BatchGetItemOutput) *
 	return e
 }
 
+// WillReturnError - method for set desired error
+func (e *BatchGetItemExpectation) WillReturnError(err error) *BatchGetItemExpectation {
+	e.err = err
+	return e
+}
+
 // BatchGetItem - this func will be invoked when test running matching expectation with actual input
 func (e *MockDynamoDB) BatchGetItem(input *dynamodb.BatchGetItemInput) (*dynamodb.BatchGetItemOutput, error) {
 	if len(e.dynaMock.BatchGetItemExpect) > 0 {
 		x := e.dynaMock.BatchGetItemExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return &dynamodb.BatchGetItemOutput{}, x.err
+		}
 
 		if x.input != nil {
 			if !reflect.DeepEqual(x.input, input.RequestItems) {
@@ -45,6 +55,10 @@ func (e *MockDynamoDB) BatchGetItem(input *dynamodb.BatchGetItemInput) (*dynamod
 func (e *MockDynamoDB) BatchGetItemWithContext(ctx aws.Context, input *dynamodb.BatchGetItemInput, opt ...request.Option) (*dynamodb.BatchGetItemOutput, error) {
 	if len(e.dynaMock.BatchGetItemExpect) > 0 {
 		x := e.dynaMock.BatchGetItemExpect[0] //get first element of expectation
+
+		if x.err != nil {
+			return &dynamodb.BatchGetItemOutput{}, x.err
+		}
 
 		if x.input != nil {
 			if !reflect.DeepEqual(x.input, input.RequestItems) {
